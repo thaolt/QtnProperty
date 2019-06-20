@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2012-1015 Alex Zhondin <qtinuum.team@gmail.com>
+   Copyright (c) 2012-2016 Alex Zhondin <lexxmark.dev@gmail.com>
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -14,8 +14,8 @@
    limitations under the License.
 */
 
-#ifndef PROPERTYCOLOR_H
-#define PROPERTYCOLOR_H
+#ifndef PROPERTY_COLOR_H
+#define PROPERTY_COLOR_H
 
 #include "../Auxiliary/PropertyTemplates.h"
 #include <QtGui/QColor>
@@ -38,6 +38,9 @@ public:
     {
     }
 
+    static bool colorFromStr(const QString& str, QColor& color);
+    static bool strFromColor(const QColor& color, QString& str);
+
 protected:
     // string conversion implementation
     bool fromStrImpl(const QString& str) override;
@@ -47,6 +50,10 @@ protected:
 };
 
 P_PROPERTY_DECL_EQ_OPERATORS(QtnPropertyQColorBase, QColor)
+
+QTN_PE_CORE_EXPORT QtnProperty* qtnCreateRedProperty(QObject *parent, QtnPropertyQColorBase *propertyColor);
+QTN_PE_CORE_EXPORT QtnProperty* qtnCreateGreenProperty(QObject *parent, QtnPropertyQColorBase *propertyColor);
+QTN_PE_CORE_EXPORT QtnProperty* qtnCreateBlueProperty(QObject *parent, QtnPropertyQColorBase *propertyColor);
 
 class QTN_PE_CORE_EXPORT QtnPropertyQColorCallback: public QtnSinglePropertyCallback<QtnPropertyQColorBase>
 {
@@ -76,4 +83,4 @@ public:
     P_PROPERTY_DECL_MEMBER_OPERATORS2(QtnPropertyQColor, QtnPropertyQColorBase)
 };
 
-#endif // PROPERTYCOLOR_H
+#endif // PROPERTY_COLOR_H

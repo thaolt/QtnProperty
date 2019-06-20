@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2012-1015 Alex Zhondin <qtinuum.team@gmail.com>
+   Copyright (c) 2012-2016 Alex Zhondin <lexxmark.dev@gmail.com>
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -17,10 +17,21 @@
 #include "PropertyDelegateQColor.h"
 #include "../../../Core/GUI/PropertyQColor.h"
 #include "../PropertyDelegateFactory.h"
-#include "../PropertyEditorHandler.h"
-#include "../PropertyEditorAux.h"
+#include "../Utils/PropertyEditorHandler.h"
+#include "../Utils/PropertyEditorAux.h"
 
 #include <QColorDialog>
+
+void regQColorDelegates(QtnPropertyDelegateFactory &factory)
+{
+    factory.registerDelegateDefault(&QtnPropertyQColorBase::staticMetaObject
+                 , &qtnCreateDelegate<QtnPropertyDelegateQColor, QtnPropertyQColorBase>
+                 , "LineEditBttn");
+
+    factory.registerDelegate(&QtnPropertyQColorBase::staticMetaObject
+                 , &qtnCreateDelegate<QtnPropertyDelegateQColorSolid, QtnPropertyQColorBase>
+                 , "Solid");
+}
 
 class QtnPropertyQColorLineEditBttnHandler: public QtnPropertyEditorHandler<QtnPropertyQColorBase, QtnLineEditBttn>
 {
@@ -50,6 +61,8 @@ private:
 
     void onToolButtonClicked(bool checked)
     {
+        Q_UNUSED(checked);
+
         QColorDialog dlg(property(), &editor());
         if (dlg.exec() == QDialog::Accepted)
         {
@@ -58,13 +71,8 @@ private:
     }
 };
 
-static bool regQColorDelegate = QtnPropertyDelegateFactory::staticInstance()
-                                .registerDelegateDefault(&QtnPropertyQColorBase::staticMetaObject
-                                , &qtnCreateDelegate<QtnPropertyDelegateQColor, QtnPropertyQColorBase>
-                                , "LineEditBttn");
-
 QtnPropertyDelegateQColor::QtnPropertyDelegateQColor(QtnPropertyQColorBase& owner)
-    : QtnPropertyDelegateTyped<QtnPropertyQColorBase>(owner),
+    : QtnPropertyDelegateTypedEx<QtnPropertyQColorBase>(owner),
       m_shape(QtnColorDelegateShapeSquare)
 {
 }
@@ -72,6 +80,37 @@ QtnPropertyDelegateQColor::QtnPropertyDelegateQColor(QtnPropertyQColorBase& owne
 void QtnPropertyDelegateQColor::applyAttributesImpl(const QtnPropertyDelegateAttributes& attributes)
 {
     qtnGetAttribute(attributes, "shape", m_shape);
+
+    bool rgbSubItems = false;
+    qtnGetAttribute(attributes, "rgbSubItems", rgbSubItems);
+    if (rgbSubItems)
+    {
+        QtnPropertyDelegateInfo delegateInfo;
+        delegateInfo.name = "SliderBox";
+        delegateInfo.attributes["liveUpdate"] = true;
+        delegateInfo.attributes["animate"] = true;
+
+        {
+            auto subProperty = qtnCreateRedProperty(0, &owner());
+            delegateInfo.attributes["fillColor"] = QColor::fromRgb(255, 100, 100);
+            subProperty->setDelegate(delegateInfo);
+            addSubProperty(subProperty);
+        }
+
+        {
+            auto subProperty = qtnCreateGreenProperty(0, &owner());
+            delegateInfo.attributes["fillColor"] = QColor::fromRgb(100, 255, 100);
+            subProperty->setDelegate(delegateInfo);
+            addSubProperty(subProperty);
+        }
+
+        {
+            auto subProperty = qtnCreateBlueProperty(0, &owner());
+            delegateInfo.attributes["fillColor"] = QColor::fromRgb(100, 100, 255);
+            subProperty->setDelegate(delegateInfo);
+            addSubProperty(subProperty);
+        }
+    }
 }
 
 void QtnPropertyDelegateQColor::drawValueImpl(QStylePainter& painter, const QRect& rect, const QStyle::State& state, bool* needTooltip) const
@@ -83,7 +122,7 @@ void QtnPropertyDelegateQColor::drawValueImpl(QStylePainter& painter, const QRec
     if (m_shape != QtnColorDelegateShapeNone)
     {
         QRect colorRect = rect;
-        colorRect.setRight(colorRect.left() + colorRect.height());
+        colorRect.setWidth(colorRect.height());
         colorRect.adjust(2, 2, -2, -2);
 
         if (m_shape == QtnColorDelegateShapeSquare)
@@ -129,8 +168,45 @@ QWidget* QtnPropertyDelegateQColor::createValueEditorImpl(QWidget* parent, const
     return editor;
 }
 
-bool QtnPropertyDelegateQColor::propertyValueToStr(QString& strValue) const
+bool QtnPropertyDelegateQColor::propertyValueToStrImpl(QString& strValue) const
 {
     strValue = owner().value().name();
     return true;
+}
+
+QtnPropertyDelegateQColorSolid::QtnPropertyDelegateQColorSolid(QtnPropertyQColorBase& owner)
+    : QtnPropertyDelegateTyped<QtnPropertyQColorBase>(owner)
+{
+}
+
+
+bool QtnPropertyDelegateQColorSolid::createSubItemValueImpl(QtnDrawContext& context, QtnSubItem& subItemValue)
+{
+    if (!QtnPropertyDelegateTyped<QtnPropertyQColorBase>::createSubItemValueImpl(context, subItemValue))
+        return false;
+
+    // correct left value rect
+    subItemValue.rect.setLeft(context.splitPos);
+    return true;
+}
+
+void QtnPropertyDelegateQColorSolid::drawValueImpl(QStylePainter& painter, const QRect& rect, const QStyle::State& state, bool* needTooltip) const
+{
+    Q_UNUSED(state);
+    Q_UNUSED(needTooltip);
+    painter.fillRect(rect, owner());
+}
+
+QWidget* QtnPropertyDelegateQColorSolid::createValueEditorImpl(QWidget* parent, const QRect& rect, QtnInplaceInfo* inplaceInfo)
+{
+    Q_UNUSED(rect);
+    Q_UNUSED(inplaceInfo);
+
+    QColorDialog dlg(owner(), parent);
+    if (dlg.exec() == QDialog::Accepted)
+    {
+        owner() = dlg.currentColor();
+    }
+
+    return nullptr;
 }

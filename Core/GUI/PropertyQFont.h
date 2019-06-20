@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2012-1015 Alex Zhondin <qtinuum.team@gmail.com>
+   Copyright (c) 2012-2016 Alex Zhondin <lexxmark.dev@gmail.com>
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -14,8 +14,8 @@
    limitations under the License.
 */
 
-#ifndef PROPERTYFONT_H
-#define PROPERTYFONT_H
+#ifndef PROPERTY_FONT_H
+#define PROPERTY_FONT_H
 
 #include "../Auxiliary/PropertyTemplates.h"
 #include <QtGui/QFont>
@@ -66,4 +66,4 @@ public:
     P_PROPERTY_DECL_MEMBER_OPERATORS2(QtnPropertyQFont, QtnPropertyQFontBase)
 };
 
-#endif // PROPERTYFONT_H
+#endif // PROPERTY_FONT_H

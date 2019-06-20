@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2012-1015 Alex Zhondin <qtinuum.team@gmail.com>
+   Copyright (c) 2012-2016 Alex Zhondin <lexxmark.dev@gmail.com>
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -15,12 +15,12 @@
 */
 
 #include "PropertyEditorAux.h"
-#include "PropertyDelegate.h"
+#include "../PropertyDelegate.h"
 
 #include <QHBoxLayout>
 #include <QKeyEvent>
 
-QtnLineEditBttn::QtnLineEditBttn(QWidget *parent)
+QtnLineEditBttn::QtnLineEditBttn(QWidget *parent, QString bttnText)
     : QWidget(parent)
 {
     QHBoxLayout *layout = new QHBoxLayout(this);
@@ -31,11 +31,30 @@ QtnLineEditBttn::QtnLineEditBttn(QWidget *parent)
     layout->addWidget(lineEdit);
 
     toolButton = new QToolButton(this);
-    toolButton->setText("...");
+    toolButton->setText(bttnText);
     toolButton->setFocusPolicy(Qt::StrongFocus);
     layout->addWidget(toolButton);
 
     setFocusProxy(lineEdit);
+    setAutoFillBackground(true);
+}
+
+QtnComboBoxBttn::QtnComboBoxBttn(QWidget *parent, QString bttnText)
+    : QWidget(parent)
+{
+    QHBoxLayout *layout = new QHBoxLayout(this);
+    layout->setMargin(0);
+    layout->setSpacing(0);
+
+    comboBox = new QComboBox(this);
+    layout->addWidget(comboBox);
+
+    toolButton = new QToolButton(this);
+    toolButton->setText(bttnText);
+    toolButton->setFocusPolicy(Qt::StrongFocus);
+    layout->addWidget(toolButton);
+
+    setFocusProxy(comboBox);
     setAutoFillBackground(true);
 }
 

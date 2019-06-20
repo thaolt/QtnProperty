@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2012-1015 Alex Zhondin <qtinuum.team@gmail.com>
+   Copyright (c) 2012-2016 Alex Zhondin <lexxmark.dev@gmail.com>
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -18,12 +18,24 @@
 
 #include "../../../Core/Core/PropertyBool.h"
 #include "../PropertyDelegateFactory.h"
-#include "../PropertyEditorHandler.h"
+#include "../Utils/PropertyEditorHandler.h"
 
-#include <QStyleOption>
+#include <QDebug>
 #include <QCheckBox>
 #include <QComboBox>
 #include <QLineEdit>
+#include <QMouseEvent>
+
+void regBoolDelegates(QtnPropertyDelegateFactory& factory)
+{
+    factory.registerDelegateDefault(&QtnPropertyBoolBase::staticMetaObject
+                 , &qtnCreateDelegate<QtnPropertyDelegateBoolCheck, QtnPropertyBoolBase>
+                 , "CheckBox");
+
+    factory.registerDelegate(&QtnPropertyBoolBase::staticMetaObject
+              , &qtnCreateDelegate<QtnPropertyDelegateBoolCombobox, QtnPropertyBoolBase>
+              , "ComboBox");
+}
 
 class QtnPropertyBoolCheckBoxHandler: public QtnPropertyEditorHandler<QtnPropertyBoolBase, QCheckBox>
 {
@@ -102,16 +114,6 @@ private:
     }
 };
 
-static bool regBoolDelegate = QtnPropertyDelegateFactory::staticInstance()
-                                .registerDelegateDefault(&QtnPropertyBoolBase::staticMetaObject
-                                , &qtnCreateDelegate<QtnPropertyDelegateBoolCheck, QtnPropertyBoolBase>
-                                , "CheckBox");
-
-static bool regBoolDelegateCombobox = QtnPropertyDelegateFactory::staticInstance()
-                                .registerDelegate(&QtnPropertyBoolBase::staticMetaObject
-                                , &qtnCreateDelegate<QtnPropertyDelegateBoolCombobox, QtnPropertyBoolBase>
-                                , "ComboBox");
-
 QCheckBox* createPropertyBoolCheckBox(QtnPropertyBoolBase& owner, QWidget* parent, const QRect& rect)
 {
     QCheckBox *checkBox = new QCheckBoxPropertyBool(parent);
@@ -123,30 +125,49 @@ QCheckBox* createPropertyBoolCheckBox(QtnPropertyBoolBase& owner, QWidget* paren
     return checkBox;
 }
 
-void QtnPropertyDelegateBoolCheck::drawValueImpl(QStylePainter& painter, const QRect& rect, const QStyle::State& state, bool* needTooltip) const
+bool QtnPropertyDelegateBoolCheck::createSubItemValueImpl(QtnDrawContext& context, QtnSubItem& subItemValue)
 {
-    QStyleOptionButton opt;
-    opt.rect = rect;
-    opt.state = state;
+    subItemValue.trackState();
+    subItemValue.rect.setWidth(context.style()->pixelMetric(QStyle::PM_IndicatorWidth));
 
-    bool value = owner().value();
-    if (value)
-        opt.state |= QStyle::State_On;
+    subItemValue.drawHandler = [this](QtnDrawContext& context, const QtnSubItem& item) {
+        QStyleOptionButton opt;
+        opt.rect = item.rect;
+        opt.state = state(context.isActive, item.state());
 
-    painter.drawControl(QStyle::CE_CheckBox, opt);
-}
+        bool value = owner().value();
+        if (value)
+            opt.state |= QStyle::State_On;
 
-QWidget* QtnPropertyDelegateBoolCheck::createValueEditorImpl(QWidget* parent, const QRect& rect, QtnInplaceInfo* inplaceInfo)
-{
-    if (!owner().isEditableByUser())
-        return 0;
+        context.painter->drawControl(QStyle::CE_CheckBox, opt);
+    };
 
-    QCheckBox *checkBox = createPropertyBoolCheckBox(owner(), parent, rect);
+    subItemValue.eventHandler = [this](QtnEventContext& context, const QtnSubItem&) {
+        bool toggleValue = false;
+        switch (context.eventType())
+        {
+        case QEvent::MouseButtonRelease:
+            toggleValue = true;
+            break;
 
-    if (inplaceInfo)
-        checkBox->setAutoFillBackground(true);
+        case QEvent::KeyPress:
+        {
+            int key = context.eventAs<QKeyEvent>()->key();
+            toggleValue = (key == Qt::Key_Space) || (key == Qt::Key_Return);
+        }
+        break;
 
-    return checkBox;
+        default:
+            ;
+        }
+
+        if (toggleValue)
+            owner().setValue(!owner().value());
+
+        return toggleValue;
+    };
+
+    return true;
 }
 
 QtnPropertyDelegateBoolCombobox::QtnPropertyDelegateBoolCombobox(QtnPropertyBoolBase& owner)
@@ -194,7 +215,7 @@ QWidget* QtnPropertyDelegateBoolCombobox::createValueEditorImpl(QWidget* parent,
     }
 }
 
-bool QtnPropertyDelegateBoolCombobox::propertyValueToStr(QString& strValue) const
+bool QtnPropertyDelegateBoolCombobox::propertyValueToStrImpl(QString& strValue) const
 {
     strValue = m_labels[owner().value()];
     return true;

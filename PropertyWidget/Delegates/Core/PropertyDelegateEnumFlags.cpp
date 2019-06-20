@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2012-1015 Alex Zhondin <qtinuum.team@gmail.com>
+   Copyright (c) 2012-2016 Alex Zhondin <lexxmark.dev@gmail.com>
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -17,10 +17,17 @@
 #include "PropertyDelegateEnumFlags.h"
 #include "../../../Core/Core/PropertyEnumFlags.h"
 #include "../PropertyDelegateFactory.h"
-#include "../PropertyEditorHandler.h"
+#include "../Utils/PropertyEditorHandler.h"
 
 #include "../../../Core/Core/PropertyBool.h"
 #include <QLineEdit>
+
+void regEnumFlagsDelegates(QtnPropertyDelegateFactory &factory)
+{
+    factory.registerDelegateDefault(&QtnPropertyEnumFlagsBase::staticMetaObject
+                 , &qtnCreateDelegate<QtnPropertyDelegateEnumFlags, QtnPropertyEnumFlagsBase>
+                 , "FlagsList");
+}
 
 static QString enumFlagsProperty2Str(const QtnPropertyEnumFlagsBase& property)
 {
@@ -38,7 +45,7 @@ static QString enumFlagsProperty2Str(const QtnPropertyEnumFlagsBase& property)
         if (value & e.value())
         {
             if (!text.isEmpty()) text += "|";
-            text += e.name();
+            text += e.displayName();
         }
 
         return true;
@@ -53,10 +60,10 @@ public:
     QtnPropertyEnumFlagsLineEditHandler(QtnPropertyEnumFlagsBase& property, QLineEdit& editor)
         : QtnPropertyEditorHandlerType(property, editor)
     {
-//        if (!property.isEditableByUser())
-            editor.setReadOnly(true);
+      // if (!property.isEditableByUser())
+      editor.setReadOnly(true);
 
-        updateEditor();
+      updateEditor();
     }
 
 private:
@@ -65,11 +72,6 @@ private:
         editor().setText(enumFlagsProperty2Str(property()));
     }
 };
-
-static bool regEnumFlagsDelegate = QtnPropertyDelegateFactory::staticInstance()
-                                .registerDelegateDefault(&QtnPropertyEnumFlagsBase::staticMetaObject
-                                , &qtnCreateDelegate<QtnPropertyDelegateEnumFlags, QtnPropertyEnumFlagsBase>
-                                , "FlagsList");
 
 QtnPropertyDelegateEnumFlags::QtnPropertyDelegateEnumFlags(QtnPropertyEnumFlagsBase& owner)
     : QtnPropertyDelegateTypedEx<QtnPropertyEnumFlagsBase>(owner)
@@ -85,8 +87,8 @@ QtnPropertyDelegateEnumFlags::QtnPropertyDelegateEnumFlags(QtnPropertyEnumFlagsB
                 QtnPropertyEnumFlagsBase& _owner = owner;
 
                 QtnPropertyBoolCallback *flagProperty = new QtnPropertyBoolCallback(0);
-                flagProperty->setName(e.name());
-                flagProperty->setDescription(owner.tr("%1 flag for %2.").arg(e.name(), owner.name()));
+                flagProperty->setName(e.displayName());
+                flagProperty->setDescription(owner.tr("%1 flag for %2.").arg(e.displayName(), owner.name()));
                 flagProperty->setCallbackValueGet([&_owner, enum_value]()->bool {
                     return _owner.value() & enum_value;
                 });
@@ -120,7 +122,7 @@ QWidget* QtnPropertyDelegateEnumFlags::createValueEditorImpl(QWidget* parent, co
     return lineEdit;
 }
 
-bool QtnPropertyDelegateEnumFlags::propertyValueToStr(QString& strValue) const
+bool QtnPropertyDelegateEnumFlags::propertyValueToStrImpl(QString& strValue) const
 {
     strValue = enumFlagsProperty2Str(owner());
     return true;

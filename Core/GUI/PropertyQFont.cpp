@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2012-1015 Alex Zhondin <qtinuum.team@gmail.com>
+   Copyright (c) 2012-2016 Alex Zhondin <lexxmark.dev@gmail.com>
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -15,12 +15,10 @@
 */
 
 #include "PropertyQFont.h"
-#include <QFontDatabase>
 
 QtnPropertyQFontBase::QtnPropertyQFontBase(QObject *parent)
     : QtnSinglePropertyBase<QFont>(parent)
 {
-    addState(QtnPropertyStateCollapsed);
 }
 
 bool QtnPropertyQFontBase::fromStrImpl(const QString& str)
@@ -29,7 +27,8 @@ bool QtnPropertyQFontBase::fromStrImpl(const QString& str)
     if (!font.fromString(str.trimmed()))
         return false;
 
-    return setValue(font);
+    setValue(font);
+    return true;
 }
 
 bool QtnPropertyQFontBase::toStrImpl(QString& str) const

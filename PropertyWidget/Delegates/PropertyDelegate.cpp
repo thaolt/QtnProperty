@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2012-1015 Alex Zhondin <qtinuum.team@gmail.com>
+   Copyright (c) 2012-2016 Alex Zhondin <lexxmark.dev@gmail.com>
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -16,17 +16,14 @@
 
 #include "PropertyDelegate.h"
 
-#include <QLineEdit>
-#include <QKeyEvent>
-
-QString qtnElidedText(const QPainter& painter, const QString& text, const QRect& rect, bool* elided)
+QtnPropertyBase* QtnPropertyDelegate::property()
 {
-    QString newText = painter.fontMetrics().elidedText(text, Qt::ElideRight, rect.width());
+    return propertyImpl();
+}
 
-    if (elided)
-        *elided = (newText != text);
-
-    return newText;
+const QtnPropertyBase* QtnPropertyDelegate::propertyImmutable() const
+{
+    return propertyImmutableImpl();
 }
 
 int QtnPropertyDelegate::subPropertyCount() const
@@ -36,6 +33,7 @@ int QtnPropertyDelegate::subPropertyCount() const
 
 QtnPropertyBase* QtnPropertyDelegate::subProperty(int index)
 {
+    Q_ASSERT(index >= 0 && index < subPropertyCount());
     return subPropertyImpl(index);
 }
 
@@ -44,77 +42,26 @@ void QtnPropertyDelegate::applyAttributes(const QtnPropertyDelegateAttributes& a
     applyAttributesImpl(attributes);
 }
 
-void QtnPropertyDelegate::drawValue(QStylePainter& painter, const QRect& rect, const QStyle::State& state, bool* needTooltip) const
+void QtnPropertyDelegate::createSubItems(QtnDrawContext& context, QList<QtnSubItem>& subItems)
 {
-    drawValueImpl(painter, rect, state, needTooltip);
+    createSubItemsImpl(context, subItems);
 }
 
-QString QtnPropertyDelegate::toolTip() const
+QStyle::State QtnPropertyDelegate::state(bool isActive, QtnSubItemState subState) const
 {
-    return toolTipImpl();
-}
-
-bool QtnPropertyDelegate::acceptKeyPressedForInplaceEdit(QKeyEvent* keyEvent) const
-{
-    return acceptKeyPressedForInplaceEditImpl(keyEvent);
-}
-
-QWidget* QtnPropertyDelegate::createValueEditor(QWidget* parent, const QRect& rect, QtnInplaceInfo* inplaceInfo)
-{
-    QWidget* valueEditor = createValueEditorImpl(parent, rect, inplaceInfo);
-    if (!valueEditor)
-        return valueEditor;
-
-    valueEditor->setObjectName("QtnPropertyValueEditor");
-    return valueEditor;
-}
-
-void QtnPropertyDelegate::drawValueImpl(QStylePainter& painter, const QRect& rect, const QStyle::State& state, bool* needTooltip) const
-{
-    QString strValue;
-    if (propertyValueToStr(strValue))
+    QStyle::State state = QStyle::State_Active;
+    if (propertyImmutable()->isEditableByUser())
+        state |= QStyle::State_Enabled;
+    if (isActive)
     {
-        drawValueText(strValue, painter, rect, state, needTooltip);
-    }
-}
-
-QString QtnPropertyDelegate::toolTipImpl() const
-{
-    QString strValue;
-    propertyValueToStr(strValue);
-    return strValue;
-}
-
-bool QtnPropertyDelegate::acceptKeyPressedForInplaceEditImpl(QKeyEvent* keyEvent) const
-{
-    int key = keyEvent->key();
-    return (key == Qt::Key_F2) || (key == Qt::Key_Space) || (key == Qt::Key_Return);
-}
-
-void QtnPropertyDelegate::drawValueText(const QString& text, QStylePainter& painter, const QRect& rect, const QStyle::State &state, bool* needTooltip)
-{
-    if (text.isEmpty())
-        return;
-
-    painter.drawText(rect, Qt::AlignLeading | Qt::AlignVCenter
-                     , qtnElidedText(painter, text, rect, needTooltip));
-}
-
-QWidget* QtnPropertyDelegate::createValueEditorLineEdit(QWidget* parent, const QRect& rect, bool readOnly, QtnInplaceInfo* inplaceInfo)
-{
-    QLineEdit* lineEdit = new QLineEdit(parent);
-    lineEdit->setGeometry(rect);
-    lineEdit->setReadOnly(readOnly);
-
-    QString strValue;
-    propertyValueToStr(strValue);
-    lineEdit->setText(strValue);
-
-    if (inplaceInfo)
-    {
-        lineEdit->selectAll();
+        state |= QStyle::State_Selected;
+        state |= QStyle::State_HasFocus;
     }
 
-    return lineEdit;
-}
+    if (subState == QtnSubItemStateUnderCursor)
+        state |= QStyle::State_MouseOver;
+    else if (subState == QtnSubItemStatePushed)
+        state |= QStyle::State_Sunken;
 
+    return state;
+}

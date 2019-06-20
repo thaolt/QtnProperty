@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2012-1015 Alex Zhondin <qtinuum.team@gmail.com>
+   Copyright (c) 2012-2016 Alex Zhondin <lexxmark.dev@gmail.com>
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -18,10 +18,6 @@
 #define QTN_PROPERTY_H
 
 #include "PropertyBase.h"
-#include "Auxiliary/PropertyDelegateInfo.h"
-#include <functional>
-
-class QtnPropertyDelegateInfoGetter;
 
 class QTN_PE_CORE_EXPORT QtnProperty: public QtnPropertyBase
 {
@@ -29,12 +25,7 @@ class QTN_PE_CORE_EXPORT QtnProperty: public QtnPropertyBase
     Q_DISABLE_COPY(QtnProperty)
 
 public:
-    virtual ~QtnProperty();
-
-    // delegates
-    const QtnPropertyDelegateInfo* delegate() const;
-    void setDelegate(const QtnPropertyDelegateInfo& delegate);
-    void setDelegateCallback(const std::function<const QtnPropertyDelegateInfo*()>& callback);
+    ~QtnProperty() override;
 
     // casts
     QtnProperty* asProperty() override { return this; }
@@ -45,9 +36,6 @@ Q_SIGNALS:
 
 protected:
     explicit QtnProperty(QObject* parent);
-
-private:
-    QScopedPointer<QtnPropertyDelegateInfoGetter> m_delegateInfoGetter;
 };
 
 #endif // QTN_PROPERTY_H

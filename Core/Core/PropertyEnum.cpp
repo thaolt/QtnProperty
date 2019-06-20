@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2012-1015 Alex Zhondin <qtinuum.team@gmail.com>
+   Copyright (c) 2012-2016 Alex Zhondin <lexxmark.dev@gmail.com>
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -25,7 +25,8 @@ bool QtnPropertyEnumBase::fromStrImpl(const QString& str)
     if (!enumValue)
         return false;
 
-    return setValue(enumValue->value());
+    setValue(enumValue->value());
+    return true;
 }
 
 bool QtnPropertyEnumBase::toStrImpl(QString& str) const

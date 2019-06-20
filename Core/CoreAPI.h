@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2012-1015 Alex Zhondin <qtinuum.team@gmail.com>
+   Copyright (c) 2012-2016 Alex Zhondin <lexxmark.dev@gmail.com>
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -17,10 +17,6 @@
 #ifndef QTN_COREAPI_H
 #define QTN_COREAPI_H
 
-#if defined(QTN_PE_CORE_LIBRARY)
-#  define QTN_PE_CORE_EXPORT Q_DECL_EXPORT
-#else
-#  define QTN_PE_CORE_EXPORT Q_DECL_IMPORT
-#endif
+#define QTN_PE_CORE_EXPORT
 
 #endif // QTN_COREAPI_H

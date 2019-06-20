@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2012-1015 Alex Zhondin <qtinuum.team@gmail.com>
+   Copyright (c) 2012-2016 Alex Zhondin <lexxmark.dev@gmail.com>
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -14,8 +14,8 @@
    limitations under the License.
 */
 
-#ifndef PROPERTYBASIS_H
-#define PROPERTYBASIS_H
+#ifndef PROPERTY_TEMPLATES_H
+#define PROPERTY_TEMPLATES_H
 
 #include "../Property.h"
 #include "PropertyMacro.h"
@@ -27,7 +27,7 @@ class QtnSinglePropertyBase: public QtnProperty
 {
  public:
     typedef T ValueType;
-    typedef typename std::remove_const<typename std::remove_reference<ValueType>::type>::type ValueTypeStore;
+    typedef typename std::decay<ValueType>::type ValueTypeStore;
 
     ValueType value() const { return valueImpl(); }
     bool setValue(ValueType newValue)
@@ -73,7 +73,7 @@ protected:
 
     virtual ValueType valueImpl() const = 0;
     virtual void setValueImpl(ValueType newValue) = 0;
-    virtual bool isValueAcceptedImpl(ValueType valueToAccept) { return true; }
+    virtual bool isValueAcceptedImpl(ValueType valueToAccept) { Q_UNUSED(valueToAccept); return true; }
     virtual bool isValueEqualImpl(ValueType valueToCompare) { return EqPred()(valueToCompare, value()); }
 
     // serialization implementation
@@ -213,9 +213,6 @@ class QtnNumericPropertyBase: public QtnSinglePropertyType
 public:
     typedef typename QtnSinglePropertyType::ValueType ValueType;
 
-    ValueType defaultValue() const { return m_defaultValue; }
-    void setDefaultValue(ValueType defaultValue) { m_defaultValue = defaultValue; }
-
     ValueType minValue() const { return m_minValue; }
     void setMinValue(ValueType minValue)
     {
@@ -237,14 +234,19 @@ public:
 
     void incrementValue(int steps = 1)
     {
-        ValueType newValue = this->value() + (stepValue() * (ValueType)steps);
+        ValueType newValue = this->value() + (stepValue() * static_cast<ValueType>(steps));
+
+        if (newValue < minValue())
+            newValue = minValue();
+        else if (newValue > maxValue())
+            newValue = maxValue();
+
         this->setValue(newValue);
     }
 
 protected:
     explicit QtnNumericPropertyBase(QObject *parent)
         : QtnSinglePropertyType(parent),
-          m_defaultValue(ValueType(0)),
           m_minValue(std::numeric_limits<ValueType>::lowest()),
           m_maxValue(std::numeric_limits<ValueType>::max()),
           m_stepValue(ValueType(1))
@@ -278,7 +280,6 @@ protected:
     }
 
 private:
-    ValueType m_defaultValue;
     ValueType m_minValue;
     ValueType m_maxValue;
     ValueType m_stepValue;
@@ -308,4 +309,4 @@ private:
     Q_DISABLE_COPY(QtnNumericPropertyValue)
 };
 
-#endif // PROPERTYBASIS_H
+#endif // PROPERTY_TEMPLATES_H

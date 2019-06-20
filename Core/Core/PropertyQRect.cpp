@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2012-1015 Alex Zhondin <qtinuum.team@gmail.com>
+   Copyright (c) 2012-2016 Alex Zhondin <lexxmark.dev@gmail.com>
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -20,7 +20,6 @@
 QtnPropertyQRectBase::QtnPropertyQRectBase(QObject *parent)
     : QtnSinglePropertyBase<QRect>(parent)
 {
-    addState(QtnPropertyStateCollapsed);
 }
 
 bool QtnPropertyQRectBase::fromStrImpl(const QString& str)
@@ -59,7 +58,8 @@ bool QtnPropertyQRectBase::fromStrImpl(const QString& str)
     if (!ok)
         return false;
 
-    return setValue(QRect(left, top, width, height));
+    setValue(QRect(left, top, width, height));
+    return true;
 }
 
 bool QtnPropertyQRectBase::toStrImpl(QString& str) const
@@ -80,7 +80,7 @@ QtnProperty* qtnCreateLeftProperty(QObject *parent, QtnPropertyQRectBase *proper
         rect.setLeft(newLeft);
         propertyRect->setValue(rect);
     });
-    QtnPropertyBase::connectMasterState(*propertyRect, *leftProperty);
+    QtnPropertyBase::connectMasterSignals(*propertyRect, *leftProperty);
 
     return leftProperty;
 }
@@ -96,7 +96,7 @@ QtnProperty* qtnCreateRightProperty(QObject *parent, QtnPropertyQRectBase *prope
         rect.setRight(newRight);
         propertyRect->setValue(rect);
     });
-    QtnPropertyBase::connectMasterState(*propertyRect, *rightProperty);
+    QtnPropertyBase::connectMasterSignals(*propertyRect, *rightProperty);
 
     return rightProperty;
 }
@@ -112,7 +112,7 @@ QtnProperty* qtnCreateTopProperty(QObject *parent, QtnPropertyQRectBase *propert
         rect.setTop(newTop);
         propertyRect->setValue(rect);
     });
-    QtnPropertyBase::connectMasterState(*propertyRect, *topProperty);
+    QtnPropertyBase::connectMasterSignals(*propertyRect, *topProperty);
 
     return topProperty;
 }
@@ -128,7 +128,7 @@ QtnProperty* qtnCreateBottomProperty(QObject *parent, QtnPropertyQRectBase *prop
         rect.setBottom(newBottom);
         propertyRect->setValue(rect);
     });
-    QtnPropertyBase::connectMasterState(*propertyRect, *bottomProperty);
+    QtnPropertyBase::connectMasterSignals(*propertyRect, *bottomProperty);
 
     return bottomProperty;
 }
@@ -144,7 +144,7 @@ QtnProperty* qtnCreateWidthProperty(QObject *parent, QtnPropertyQRectBase *prope
         rect.setWidth(newWidth);
         propertyRect->setValue(rect);
     });
-    QtnPropertyBase::connectMasterState(*propertyRect, *widthProperty);
+    QtnPropertyBase::connectMasterSignals(*propertyRect, *widthProperty);
 
     return widthProperty;
 }
@@ -160,7 +160,7 @@ QtnProperty* qtnCreateHeightProperty(QObject *parent, QtnPropertyQRectBase *prop
         rect.setHeight(newHeight);
         propertyRect->setValue(rect);
     });
-    QtnPropertyBase::connectMasterState(*propertyRect, *heightProperty);
+    QtnPropertyBase::connectMasterSignals(*propertyRect, *heightProperty);
 
     return heightProperty;
 }

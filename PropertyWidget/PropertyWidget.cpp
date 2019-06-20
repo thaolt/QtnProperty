@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2012-1015 Alex Zhondin <qtinuum.team@gmail.com>
+   Copyright (c) 2012-2016 Alex Zhondin <lexxmark.dev@gmail.com>
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -61,18 +61,59 @@ protected:
     }
 };
 
+// It's safe to call this function on any platform.
+// It will only have an effect on the Mac.
+void set_smaller_text_osx(QWidget *w)
+{
+    Q_ASSERT(w != 0);
+
+    // By default, none of these size attributes are set.
+    // If any has been set explicitly, we'll leave the widget alone.
+    if (!w->testAttribute(Qt::WA_MacMiniSize) &&
+        !w->testAttribute(Qt::WA_MacSmallSize) &&
+        !w->testAttribute(Qt::WA_MacNormalSize) &&
+        !w->testAttribute(Qt::WA_MacVariableSize))
+    {
+      // make the text the 'normal' size
+      w->setAttribute(Qt::WA_MacSmallSize);
+    }
+}
+
 QtnPropertyWidget::QtnPropertyWidget(QWidget* parent)
     : QWidget(parent),
-      m_parts(QtnPropertyWidgetPartsNone),
+      m_parts(QtnPropertyWidgetPartsDescriptionPanel),
       m_layout(new QVBoxLayout(this)),
       m_toolbar(0),
       m_propertyView(new QtnPropertyView(this)),
       m_descriptionSplitter(0),
       m_descriptionPanel(0)
 {
+  set_smaller_text_osx(this);
+  
+  m_layout->addWidget(m_propertyView);
+
+  QObject::connect(m_propertyView, &QtnPropertyView::activePropertyChanged, this, &QtnPropertyWidget::setActiveProperty);
+  updateParts();
+}
+
+QtnPropertyWidget::QtnPropertyWidget(QtnPropertyView *propertyView, QWidget* parent)
+    : QWidget(parent),
+      m_parts(QtnPropertyWidgetPartsDescriptionPanel),
+      m_layout(new QVBoxLayout(this)),
+      m_toolbar(0),
+      m_propertyView(propertyView),
+      m_descriptionSplitter(0),
+      m_descriptionPanel(0)
+{
+    Q_ASSERT(propertyView);
+    propertyView->setParent(this);
+
+    set_smaller_text_osx(this);
+
     m_layout->addWidget(m_propertyView);
 
     QObject::connect(m_propertyView, &QtnPropertyView::activePropertyChanged, this, &QtnPropertyWidget::setActiveProperty);
+    updateParts();
 }
 
 QtnPropertyWidget::~QtnPropertyWidget()
@@ -115,11 +156,15 @@ void QtnPropertyWidget::updateParts()
             m_descriptionPanel->setAlignment(Qt::AlignTop);
             m_descriptionPanel->setWordWrap(true);
             m_descriptionPanel->setFrameStyle(QFrame::Box | QFrame::Sunken);
-            m_descriptionPanel->setMinimumSize(0, 0);
+            m_descriptionPanel->setMinimumSize(0,  5 * QFontMetrics(font()).height() / 2);
             QSizePolicy p = m_descriptionPanel->sizePolicy();
             p.setVerticalPolicy(QSizePolicy::Ignored);
             p.setHorizontalPolicy(QSizePolicy::Ignored);
             m_descriptionPanel->setSizePolicy(p);
+
+            // set desctiption panel fixed size
+            splitter->setStretchFactor(0, 1);
+            splitter->setStretchFactor(1, 0);
 
             // setup DblClick handler
             splitter->handle(1)->installEventFilter(new QtnSplitterEventsHandler(splitter));
@@ -131,14 +176,14 @@ void QtnPropertyWidget::updateParts()
     }
     else
     {
+        m_layout->addWidget(m_propertyView);
+
         if (m_descriptionSplitter)
         {
             delete m_descriptionSplitter;
             m_descriptionSplitter = nullptr;
             m_descriptionPanel = nullptr;
         }
-
-        m_layout->addWidget(m_propertyView);
     }
 }
 
@@ -152,7 +197,7 @@ void QtnPropertyWidget::setActiveProperty(const QtnPropertyBase* activeProperty)
         }
         else
         {
-            m_descriptionPanel->setText(QString("<b>%1</b><br>%2").arg(activeProperty->name(), activeProperty->description()));
+            m_descriptionPanel->setText(QString("<b>%1</b><br>%2").arg(activeProperty->displayName(), activeProperty->description()));
         }
     }
 }

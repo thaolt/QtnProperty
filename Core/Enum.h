@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2012-1015 Alex Zhondin <qtinuum.team@gmail.com>
+   Copyright (c) 2012-2016 Alex Zhondin <lexxmark.dev@gmail.com>
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -42,22 +42,27 @@ public:
     {
     }
 
-    QtnEnumValueInfo(QtnEnumValueType value, const QString& name, QtnEnumValueState state = QtnEnumValueStateNone)
+    QtnEnumValueInfo(QtnEnumValueType value, const QString& name, const QString& displayName = "", QtnEnumValueState state = QtnEnumValueStateNone)
         : m_value(value),
           m_name(name),
+          m_displayName(displayName),
           m_state(state)
     {
+        if (m_displayName.isEmpty())
+            m_displayName = name;
     }
 
     ~QtnEnumValueInfo() {}
 
     QtnEnumValueType value() const { return m_value; }
     const QString& name() const { return m_name; }
+    const QString& displayName() const { return m_displayName; }
     QtnEnumValueState state() const { return m_state; }
 
 private:
     QtnEnumValueType m_value;
     QString m_name;
+    QString m_displayName;
     QtnEnumValueState m_state;
 };
 
@@ -87,9 +92,13 @@ public:
 
     const QtnEnumValueInfo* findByValue(QtnEnumValueType value) const;
     const QtnEnumValueInfo* findByName(const QString& name, Qt::CaseSensitivity cs = Qt::CaseSensitive) const;
+    const QtnEnumValueInfo* findByDisplayName(const QString& displayName, Qt::CaseSensitivity cs = Qt::CaseSensitive) const;
 
     const QtnEnumValueInfo* fromStr(const QString& str) const;
     bool toStr(QString& str, const QtnEnumValueInfo* value) const;
+    bool toStr(QString& str, QtnEnumValueType value) const;
+
+    void setDynamicValues(const QVector<QtnEnumValueInfo>& dynamicValues);
 
 private:
     QString m_name;

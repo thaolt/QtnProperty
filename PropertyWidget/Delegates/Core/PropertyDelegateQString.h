@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2012-1015 Alex Zhondin <qtinuum.team@gmail.com>
+   Copyright (c) 2012-2016 Alex Zhondin <lexxmark.dev@gmail.com>
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@
 #ifndef PROPERTY_DELEGATE_QSTRING_H
 #define PROPERTY_DELEGATE_QSTRING_H
 
-#include "../PropertyDelegate.h"
+#include "../Utils/PropertyDelegateMisc.h"
 
 class QtnPropertyQStringBase;
 
@@ -31,7 +31,7 @@ public:
 protected:
     bool acceptKeyPressedForInplaceEditImpl(QKeyEvent* keyEvent) const override;
     QWidget* createValueEditorImpl(QWidget* parent, const QRect& rect, QtnInplaceInfo* inplaceInfo = nullptr) override;
-    bool propertyValueToStr(QString& strValue) const override;
+    bool propertyValueToStrImpl(QString& strValue) const override;
 };
 
 class QTN_PW_EXPORT QtnPropertyDelegateQStringInvalidBase: public QtnPropertyDelegateQString
@@ -80,6 +80,26 @@ protected:
 
 private:
     QStringList m_items;
+};
+
+using QtnGetCandidatesFn = std::function<QStringList()>;
+using QtnCreateCandidateFn = std::function<QString(QWidget*, QString)>;
+Q_DECLARE_METATYPE(QtnGetCandidatesFn);
+Q_DECLARE_METATYPE(QtnCreateCandidateFn);
+
+class QTN_PW_EXPORT QtnPropertyDelegateQStringCallback: public QtnPropertyDelegateQString
+{
+    Q_DISABLE_COPY(QtnPropertyDelegateQStringCallback)
+
+public:
+    QtnPropertyDelegateQStringCallback(QtnPropertyQStringBase& owner);
+
+protected:
+    void applyAttributesImpl(const QtnPropertyDelegateAttributes& attributes) override;
+    QWidget* createValueEditorImpl(QWidget* parent, const QRect& rect, QtnInplaceInfo* inplaceInfo = nullptr) override;
+
+private:
+    QtnPropertyDelegateAttributes m_editorAttributes;
 };
 
 #endif // PROPERTY_DELEGATE_QSTRING_H

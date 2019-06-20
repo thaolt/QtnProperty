@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2012-1015 Alex Zhondin <qtinuum.team@gmail.com>
+   Copyright (c) 2012-2016 Alex Zhondin <lexxmark.dev@gmail.com>
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -31,12 +31,15 @@ QtnPropertyEditorHandlerBase::~QtnPropertyEditorHandlerBase()
 
 void QtnPropertyEditorHandlerBase::onObjectDestroyed(QObject *object)
 {
+    Q_UNUSED(object);
     Q_ASSERT((object == &propertyBase()) || (object == &editorBase()));
     delete this;
 }
 
 void QtnPropertyEditorHandlerBase::onPropertyDidChange(const QtnPropertyBase* changedProperty, const QtnPropertyBase* firedProperty, QtnPropertyChangeReason reason)
 {
+    Q_UNUSED(changedProperty);
+
     if ((reason & QtnPropertyChangeReasonValue) && (&propertyBase() == firedProperty))
         updateEditor();
 }

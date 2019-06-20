@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2012-1015 Alex Zhondin <qtinuum.team@gmail.com>
+   Copyright (c) 2012-2016 Alex Zhondin <lexxmark.dev@gmail.com>
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -18,10 +18,12 @@
 #include "../../../Core/Core/PropertyQPoint.h"
 #include "../PropertyDelegateFactory.h"
 
-static bool regQPointDelegate = QtnPropertyDelegateFactory::staticInstance()
-                                .registerDelegateDefault(&QtnPropertyQPointBase::staticMetaObject
-                                , &qtnCreateDelegate<QtnPropertyDelegateQPoint, QtnPropertyQPointBase>
-                                , "XY");
+void regQPointDelegates(QtnPropertyDelegateFactory &factory)
+{
+    factory.registerDelegateDefault(&QtnPropertyQPointBase::staticMetaObject
+			     , &qtnCreateDelegate<QtnPropertyDelegateQPoint, QtnPropertyQPointBase>
+			     , "XY");
+}
 
 QtnPropertyDelegateQPoint::QtnPropertyDelegateQPoint(QtnPropertyQPointBase& owner)
     : QtnPropertyDelegateTypedEx<QtnPropertyQPointBase>(owner)
@@ -35,7 +37,7 @@ QWidget* QtnPropertyDelegateQPoint::createValueEditorImpl(QWidget* parent, const
     return createValueEditorLineEdit(parent, rect, true, inplaceInfo);
 }
 
-bool QtnPropertyDelegateQPoint::propertyValueToStr(QString& strValue) const
+bool QtnPropertyDelegateQPoint::propertyValueToStrImpl(QString& strValue) const
 {
     QPoint value = owner().value();
     strValue = QString("%1 x %2").arg(value.x()).arg(value.y());

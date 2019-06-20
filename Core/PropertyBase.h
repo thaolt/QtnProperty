@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2012-1015 Alex Zhondin <qtinuum.team@gmail.com>
+   Copyright (c) 2012-2016 Alex Zhondin <lexxmark.dev@gmail.com>
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -18,12 +18,15 @@
 #define QTN_PROPERTY_BASE_H
 
 #include "Auxiliary/PropertyAux.h"
+#include "Auxiliary/PropertyDelegateInfo.h"
 #include <QDataStream>
 #include <QVariant>
+#include <functional>
 
 class QScriptEngine;
 class QtnPropertySet;
 class QtnProperty;
+class QtnPropertyDelegateInfoGetter;
 
 class QTN_PE_CORE_EXPORT QtnPropertyBase: public QObject
 {
@@ -35,6 +38,9 @@ public:
 
     QString name() const { return objectName(); }
     void setName(const QString& name);
+
+    QString displayName() const { return m_displayName; }
+    void setDisplayName(const QString& displayName);
 
     QString description() const { return m_description; }
     void setDescription(const QString& description);
@@ -53,6 +59,7 @@ public:
     void switchState(QtnPropertyState stateToSwitch, bool switchOn, bool force = false);
     void switchStateAuto(QtnPropertyState stateToSwitch, bool force = false);
 
+    bool isEditable() const;
     bool isEditableByUser() const;
     bool isVisible() const;
     bool isSimple() const { return !m_stateLocal.testFlag(QtnPropertyStateNonSimple); }
@@ -76,14 +83,27 @@ public:
     virtual QtnPropertySet* asPropertySet() { return nullptr; }
     virtual const QtnPropertySet* asPropertySet() const { return nullptr; }
 
-    static QMetaObject::Connection connectMasterState(const QtnPropertyBase& masterProperty, QtnPropertyBase& slaveProperty);
-    static bool disconnectMasterState(const QtnPropertyBase& masterProperty, QtnPropertyBase& slaveProperty);
+    // delegates
+    const QtnPropertyDelegateInfo* delegate() const;
+    void setDelegate(const QtnPropertyDelegateInfo& delegate);
+    void setDelegateCallback(const std::function<QtnPropertyDelegateInfo*()>& callback);
+
+    void setDelegateAttribute(const QByteArray& attributeName, const QVariant& attributeValue);
+
+    // reset callback
+    bool hasResetCallback() const { return m_resetCallback != nullptr; }
+    void setResetCallback(const std::function<void(QtnPropertyBase&)>& resetCallback);
+    bool reset();
+
+    static void connectMasterSignals(const QtnPropertyBase& masterProperty, QtnPropertyBase& slaveProperty);
+    static void disconnectMasterSignals(const QtnPropertyBase& masterProperty, QtnPropertyBase& slaveProperty);
 
 public: // properties for scripting
     Q_PROPERTY(QString name READ name)
+    Q_PROPERTY(QString displayName READ displayName)
     Q_PROPERTY(QString description READ description)
     Q_PROPERTY(qint32 id READ id)
-    Q_PROPERTY(bool isEditable READ isEditableByUser)
+    Q_PROPERTY(bool isEditable READ isEditable)
     Q_PROPERTY(quint32 state READ state)
     Q_PROPERTY(QVariant value READ valueAsVariant WRITE setValueAsVariant)
 
@@ -99,29 +119,35 @@ protected:
     virtual bool saveImpl(QDataStream& stream) const;
 
     // string conversion implementation
-    virtual bool fromStrImpl(const QString& str) { return false; }
-    virtual bool toStrImpl(QString& str) const { return false; }
+    virtual bool fromStrImpl(const QString& str) { Q_UNUSED(str); return false; }
+    virtual bool toStrImpl(QString& str) const { Q_UNUSED(str); return false; }
 
     // variant conversion implementation
     virtual bool fromVariantImpl(const QVariant& var);
     virtual bool toVariantImpl(QVariant& var) const;
 
     // inherited states support
-    virtual void updateStateInherited(bool force) { /* does nothing by default */ }
+    virtual void updateStateInherited(bool force) { Q_UNUSED(force); /* does nothing by default */ }
     void setStateInherited(QtnPropertyState stateToSet, bool force = false);
 
 private:
-    void masterPropertyStateDidChange(const QtnPropertyBase* changedProperty, const QtnPropertyBase* firedProperty, QtnPropertyChangeReason reason);
+    void masterPropertyWillChange(const QtnPropertyBase* changedProperty, const QtnPropertyBase* firedProperty, QtnPropertyChangeReason reason, QtnPropertyValuePtr newValue);
+    void masterPropertyDidChange(const QtnPropertyBase* changedProperty, const QtnPropertyBase* firedProperty, QtnPropertyChangeReason reason);
 
     // getter/setter for "value" property
     QVariant valueAsVariant() const;
     void setValueAsVariant(const QVariant& value);
 
+    QString m_displayName;
     QString m_description;
     QtnPropertyID m_id;
 
     QtnPropertyState m_stateLocal;
     QtnPropertyState m_stateInherited;
+
+    QScopedPointer<QtnPropertyDelegateInfoGetter> m_delegateInfoGetter;
+
+    std::function<void(QtnPropertyBase&)> m_resetCallback;
 
     friend class QtnPropertySet;
 };

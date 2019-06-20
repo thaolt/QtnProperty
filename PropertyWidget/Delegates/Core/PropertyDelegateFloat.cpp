@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2012-1015 Alex Zhondin <qtinuum.team@gmail.com>
+   Copyright (c) 2012-2016 Alex Zhondin <lexxmark.dev@gmail.com>
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -17,9 +17,21 @@
 #include "PropertyDelegateFloat.h"
 #include "../../../Core/Core/PropertyFloat.h"
 #include "../PropertyDelegateFactory.h"
-#include "../PropertyEditorHandler.h"
+#include "../Utils/PropertyEditorHandler.h"
+#include "../Utils/PropertyDelegateSliderBox.h"
 
-#include <QDoubleSpinBox>
+#include <QKeyEvent>
+
+void regFloatDelegates(QtnPropertyDelegateFactory &factory)
+{
+    factory.registerDelegateDefault(&QtnPropertyFloatBase::staticMetaObject
+                                , &qtnCreateDelegate<QtnPropertyDelegateFloat, QtnPropertyFloatBase>
+                                , "SpinBox");
+
+    factory.registerDelegate(&QtnPropertyFloatBase::staticMetaObject
+                                , &qtnCreateDelegate<QtnPropertyDelegateSlideBoxTyped<QtnPropertyFloatBase>, QtnPropertyFloatBase>
+                                , "SliderBox");
+}
 
 class QtnPropertyFloatSpinBoxHandler: public QtnPropertyEditorHandler<QtnPropertyFloatBase, QDoubleSpinBox>
 {
@@ -43,7 +55,11 @@ public:
 private:
     void updateEditor() override
     {
-        editor().setValue((float)property());
+        float editorValue = (float)editor().value();
+        float propertyValue = (float)property();
+        // update editor if property value differs from editor value
+        if (editorValue != propertyValue)
+            editor().setValue(propertyValue);
     }
 
     void onValueChanged(double value)
@@ -52,14 +68,10 @@ private:
     }
 };
 
-static bool regFloatDelegate = QtnPropertyDelegateFactory::staticInstance()
-                                .registerDelegateDefault(&QtnPropertyFloatBase::staticMetaObject
-                                , &qtnCreateDelegate<QtnPropertyDelegateFloat, QtnPropertyFloatBase>
-                                , "SpinBox");
 
 QWidget* QtnPropertyDelegateFloat::createValueEditorImpl(QWidget* parent, const QRect& rect, QtnInplaceInfo* inplaceInfo)
 {
-    QDoubleSpinBox *spinBox = new QDoubleSpinBox(parent);
+    QDoubleSpinBox *spinBox = new QtnDoubleSpinBox(parent);
     spinBox->setGeometry(rect);
 
     new QtnPropertyFloatSpinBoxHandler(owner(), *spinBox);
@@ -72,7 +84,7 @@ QWidget* QtnPropertyDelegateFloat::createValueEditorImpl(QWidget* parent, const 
     return spinBox;
 }
 
-bool QtnPropertyDelegateFloat::propertyValueToStr(QString& strValue) const
+bool QtnPropertyDelegateFloat::propertyValueToStrImpl(QString& strValue) const
 {
     strValue = QString::number(owner().value());
     return true;

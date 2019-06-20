@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2012-1015 Alex Zhondin <qtinuum.team@gmail.com>
+   Copyright (c) 2012-2016 Alex Zhondin <lexxmark.dev@gmail.com>
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -120,13 +120,13 @@ QRect QtnAccessibilityProxy::propertyActionRect(QtnPropertyBase* property, int a
         return QRect();
 
     const auto& item = m_owner->m_visibleItems[index];
-    if (!item.actionsValid)
+    if (!item.subItemsValid)
         return QRect();
 
-    if (actionIndex < 0 || actionIndex >= item.actions.size())
+    if (actionIndex < 0 || actionIndex >= item.subItems.size())
         return QRect();
 
-    return item.actions[actionIndex].rect;
+    return item.subItems[actionIndex].rect;
 }
 
 QString QtnAccessibilityProxy::propertyDelegateName(QtnPropertyBase* property)
@@ -134,13 +134,9 @@ QString QtnAccessibilityProxy::propertyDelegateName(QtnPropertyBase* property)
     if (!property)
         return QString();
 
-    auto theProperty = property->asProperty();
-    if (!theProperty)
-        return QString();
+    if (!property->delegate())
+        return QString("<default>");
 
-    if (!theProperty->delegate())
-        return QString("default");
-
-    return theProperty->delegate()->name;
+    return property->delegate()->name;
 }
 

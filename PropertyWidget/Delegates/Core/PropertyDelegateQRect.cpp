@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2012-1015 Alex Zhondin <qtinuum.team@gmail.com>
+   Copyright (c) 2012-2016 Alex Zhondin <lexxmark.dev@gmail.com>
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -20,10 +20,12 @@
 
 #include <QLineEdit>
 
-static bool regQRectDelegate = QtnPropertyDelegateFactory::staticInstance()
-                                .registerDelegateDefault(&QtnPropertyQRectBase::staticMetaObject
-                                , &qtnCreateDelegate<QtnPropertyDelegateQRect, QtnPropertyQRectBase>
-                                , "LTWH");
+void regQRectDelegates(QtnPropertyDelegateFactory &factory)
+{
+    factory.registerDelegateDefault(&QtnPropertyQRectBase::staticMetaObject
+			     , &qtnCreateDelegate<QtnPropertyDelegateQRect, QtnPropertyQRectBase>
+			     , "LTWH");
+}
 
 QtnPropertyDelegateQRect::QtnPropertyDelegateQRect(QtnPropertyQRectBase& owner)
     : QtnPropertyDelegateTypedEx<QtnPropertyQRectBase>(owner)
@@ -39,7 +41,7 @@ QWidget* QtnPropertyDelegateQRect::createValueEditorImpl(QWidget* parent, const 
     return createValueEditorLineEdit(parent, rect, true, inplaceInfo);
 }
 
-bool QtnPropertyDelegateQRect::propertyValueToStr(QString& strValue) const
+bool QtnPropertyDelegateQRect::propertyValueToStrImpl(QString& strValue) const
 {
     QRect value = owner().value();
     strValue = QString("[(%1, %2), %3 x %4]").arg(value.left()).arg(value.top()).arg(value.width()).arg(value.height());

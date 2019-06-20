@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2012-1015 Alex Zhondin <qtinuum.team@gmail.com>
+   Copyright (c) 2012-2016 Alex Zhondin <lexxmark.dev@gmail.com>
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@
 #include "QObjectPropertySet.h"
 #include "PropertyCore.h"
 #include "PropertyGUI.h"
+#include <QDebug>
 #include <QMetaObject>
 #include <QMetaProperty>
 #include <QMap>
@@ -44,6 +45,7 @@ QtnMetaPropertyFactory_t qtnCreateFactory()
 
         PropertyCallbackType* propertyPtr = property.data();
         property->setCallbackValueAccepted([propertyPtr] (ValueType value)->bool {
+            Q_UNUSED(value);
             return propertyPtr->isEditableByUser();
         });
 
@@ -58,19 +60,22 @@ bool qtnRegisterDefaultMetaPropertyFactory()
     qtnRegisterMetaPropertyFactory(QVariant::Bool, qtnCreateFactory<QtnPropertyBoolCallback>());
     qtnRegisterMetaPropertyFactory(QVariant::String, qtnCreateFactory<QtnPropertyQStringCallback>());
     qtnRegisterMetaPropertyFactory(QVariant::Double, qtnCreateFactory<QtnPropertyDoubleCallback>());
-//    qtnRegisterMetaPropertyFactory(QVariant::Float, qtnCreateFactory<QtnPropertyFloatCallback>());
+    // qtnRegisterMetaPropertyFactory(QVariant::Float, qtnCreateFactory<QtnPropertyFloatCallback>());
     qtnRegisterMetaPropertyFactory(QVariant::Int, qtnCreateFactory<QtnPropertyIntCallback>());
     qtnRegisterMetaPropertyFactory(QVariant::UInt, qtnCreateFactory<QtnPropertyUIntCallback>());
     qtnRegisterMetaPropertyFactory(QVariant::Point, qtnCreateFactory<QtnPropertyQPointCallback>());
+    qtnRegisterMetaPropertyFactory(QVariant::PointF, qtnCreateFactory<QtnPropertyQPointFCallback>());
     qtnRegisterMetaPropertyFactory(QVariant::Rect, qtnCreateFactory<QtnPropertyQRectCallback>());
+    qtnRegisterMetaPropertyFactory(QVariant::RectF, qtnCreateFactory<QtnPropertyQRectFCallback>());
     qtnRegisterMetaPropertyFactory(QVariant::Size, qtnCreateFactory<QtnPropertyQSizeCallback>());
+    qtnRegisterMetaPropertyFactory(QVariant::SizeF, qtnCreateFactory<QtnPropertyQSizeFCallback>());
     qtnRegisterMetaPropertyFactory(QVariant::Color, qtnCreateFactory<QtnPropertyQColorCallback>());
     qtnRegisterMetaPropertyFactory(QVariant::Font, qtnCreateFactory<QtnPropertyQFontCallback>());
+    qtnRegisterMetaPropertyFactory(QVariant::Pen, qtnCreateFactory<QtnPropertyQPenCallback>());
     return true;
 }
 
 static QMap<int, QtnMetaPropertyFactory_t> qtnFactoryMap;
-static bool success = qtnRegisterDefaultMetaPropertyFactory();
 
 bool qtnRegisterMetaPropertyFactory(int metaPropertyType, const QtnMetaPropertyFactory_t& factory)
 {
@@ -85,6 +90,11 @@ bool qtnRegisterMetaPropertyFactory(int metaPropertyType, const QtnMetaPropertyF
 
 QtnProperty* qtnCreateQObjectProperty(QObject* object, const QMetaProperty& metaProperty)
 {
+    static bool registerDefaultMetaPropertyFactory = qtnRegisterDefaultMetaPropertyFactory();
+
+    if (!registerDefaultMetaPropertyFactory)
+        return nullptr;
+
     if (!object)
         return nullptr;
 

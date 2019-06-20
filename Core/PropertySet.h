@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2012-1015 Alex Zhondin <qtinuum.team@gmail.com>
+   Copyright (c) 2012-2016 Alex Zhondin <lexxmark.dev@gmail.com>
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@
 #define QTN_PROPERTY_SET_H
 
 #include "Property.h"
+#include <QJsonObject>
 
 class QTN_PE_CORE_EXPORT QtnPropertySet: public QtnPropertyBase
 {
@@ -26,7 +27,7 @@ class QTN_PE_CORE_EXPORT QtnPropertySet: public QtnPropertyBase
 
 public:
     explicit QtnPropertySet(QObject* parent);
-    virtual ~QtnPropertySet();
+    ~QtnPropertySet() override;
 
 public slots:
     // sub properties
@@ -50,15 +51,19 @@ public slots:
     QtnPropertySet* asPropertySet() override { return this; }
     const QtnPropertySet* asPropertySet() const override { return this; }
 
+    // JSON support
+    bool fromJson(const QJsonObject& jsonObject);
+    bool toJson(QJsonObject& jsonObject) const;
+
 protected:
     void updateStateInherited(bool force) override;
 
     // cloning implementation
-    virtual QtnPropertySet* createNewImpl(QObject* parentForNew) const { return nullptr; }
-    virtual QtnPropertySet* createCopyImpl(QObject* parentForCopy) const { return nullptr; }
+    virtual QtnPropertySet* createNewImpl(QObject* parentForNew) const { Q_UNUSED(parentForNew); return nullptr; }
+    virtual QtnPropertySet* createCopyImpl(QObject* parentForCopy) const { Q_UNUSED(parentForCopy); return nullptr; }
 
     // copy values
-    virtual bool copyValuesImpl(QtnPropertySet* propertySetCopyFrom, QtnPropertyState ignoreMask) { return false; }
+    virtual bool copyValuesImpl(QtnPropertySet* propertySetCopyFrom, QtnPropertyState ignoreMask) { Q_UNUSED(propertySetCopyFrom); Q_UNUSED(ignoreMask); return false; }
 
     // string conversion implementation
     bool fromStrImpl(const QString& str) override;
@@ -80,12 +85,29 @@ private:
 private:
     QList<QtnPropertyBase*> m_childProperties;
 
-    bool m_ignoreChildPropertyChanges;
+    bool m_ignoreChildPropertyChanges = false;
 
     friend void qtnConnectChildProperty(QtnPropertySet* masterProperty, QtnPropertyBase* childProperty);
     friend void qtnDisconnectChildProperty(QtnPropertySet* masterProperty, QtnPropertyBase* childProperty);
 };
 
 Q_DECLARE_METATYPE(QtnPropertySet*)
+
+template <typename T>
+T* qtnCreateProperty(QtnPropertySet* parent, QString name)
+{
+    auto property = new T(parent);
+    property->setName(name);
+    parent->addChildProperty(property);
+    return property;
+}
+
+template <typename T>
+T* qtnCreateProperty(QtnPropertySet* parent)
+{
+    auto property = new T(parent);
+    parent->addChildProperty(property);
+    return property;
+}
 
 #endif // QTN_PROPERTY_SET_H

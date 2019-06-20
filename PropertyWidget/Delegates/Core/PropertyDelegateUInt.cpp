@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2012-1015 Alex Zhondin <qtinuum.team@gmail.com>
+   Copyright (c) 2012-2016 Alex Zhondin <lexxmark.dev@gmail.com>
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -17,78 +17,57 @@
 #include "PropertyDelegateUInt.h"
 #include "../../../Core/Core/PropertyUInt.h"
 #include "../PropertyDelegateFactory.h"
-#include "../PropertyEditorHandler.h"
+#include "../Utils/PropertyEditorHandler.h"
+#include "../Utils/PropertyDelegateSliderBox.h"
 
 #include <QSpinBox>
 
-const quint32 qtn_u_2 = std::numeric_limits<quint32>::max() / 2 + 1;
-static qint32 qtn_u2i(quint32 val)
+void regUIntDelegates(QtnPropertyDelegateFactory &factory)
 {
-    return qint32(val - qtn_u_2);
-}
-static quint32 qtn_i2u(qint32 val)
-{
-    return (quint32)val + qtn_u_2;
+    factory.registerDelegateDefault(&QtnPropertyUIntBase::staticMetaObject
+            , &qtnCreateDelegate<QtnPropertyDelegateUInt, QtnPropertyUIntBase>
+            , "SpinBox");
+
+
+    factory.registerDelegate(&QtnPropertyUIntBase::staticMetaObject
+            , &qtnCreateDelegate<QtnPropertyDelegateSlideBoxTyped<QtnPropertyUIntBase>, QtnPropertyUIntBase>
+            , "SliderBox");
 }
 
-class QtnPropertyUIntSpinBoxHandler: public QtnPropertyEditorHandler<QtnPropertyUIntBase, QSpinBox>
+
+class QtnPropertyUIntSpinBoxHandler: public QtnPropertyEditorHandler<QtnPropertyUIntBase, QtnSpinBoxUnsigned>
 {
 public:
-    QtnPropertyUIntSpinBoxHandler(QtnPropertyUIntBase& property, QSpinBox& editor)
+    QtnPropertyUIntSpinBoxHandler(QtnPropertyUIntBase& property, QtnSpinBoxUnsigned& editor)
         : QtnPropertyEditorHandlerType(property, editor)
     {
         if (!property.isEditableByUser())
             editor.setReadOnly(true);
 
-        editor.setRange(qtn_u2i(property.minValue()), qtn_u2i(property.maxValue()));
-        editor.setSingleStep(qtn_u2i(property.stepValue()));
+        editor.setUintRange(property.minValue(), property.maxValue());
+        editor.setUintSingleStep(property.stepValue());
 
         updateEditor();
 
-        QObject::connect(  &editor, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged)
-                         , this, &QtnPropertyUIntSpinBoxHandler::onValueChanged);
+        QObject::connect(  &editor, &QtnSpinBoxUnsigned::uintValueChanged
+                         , this, &QtnPropertyUIntSpinBoxHandler::onUintValueChanged);
     }
 
 private:
     void updateEditor() override
     {
-        editor().setValue(qtn_u2i(property().value()));
+        editor().setUintValue(property().value());
     }
 
-    void onValueChanged(int value)
+    void onUintValueChanged(quint32 value)
     {
-        property() = qtn_i2u(value);
+        property() = value;
     }
 };
-
-class SpinBoxUnsigned: public QSpinBox
-{
-public:
-    SpinBoxUnsigned(QWidget* parent)
-        : QSpinBox(parent)
-    {
-    }
-
-protected:
-    int valueFromText(const QString& text) const override
-    {
-        return qtn_u2i(locale().toUInt(text));
-    }
-
-    QString textFromValue(int val) const override
-    {
-        return locale().toString(qtn_i2u(val));
-    }
-};
-
-static bool regUIntDelegate = QtnPropertyDelegateFactory::staticInstance()
-                                .registerDelegateDefault(&QtnPropertyUIntBase::staticMetaObject
-                                , &qtnCreateDelegate<QtnPropertyDelegateUInt, QtnPropertyUIntBase>
-                                , "SpinBox");
 
 QWidget* QtnPropertyDelegateUInt::createValueEditorImpl(QWidget* parent, const QRect& rect, QtnInplaceInfo* inplaceInfo)
 {
-    QSpinBox* spinBox = new SpinBoxUnsigned(parent);
+    auto spinBox = new QtnSpinBoxUnsigned(parent);
     spinBox->setGeometry(rect);
 
     new QtnPropertyUIntSpinBoxHandler(owner(), *spinBox);
@@ -101,7 +80,7 @@ QWidget* QtnPropertyDelegateUInt::createValueEditorImpl(QWidget* parent, const Q
     return spinBox;
 }
 
-bool QtnPropertyDelegateUInt::propertyValueToStr(QString& strValue) const
+bool QtnPropertyDelegateUInt::propertyValueToStrImpl(QString& strValue) const
 {
     strValue = QString::number(owner().value());
     return true;

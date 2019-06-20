@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2012-1015 Alex Zhondin <qtinuum.team@gmail.com>
+   Copyright (c) 2012-2016 Alex Zhondin <lexxmark.dev@gmail.com>
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -17,10 +17,17 @@
 #include "PropertyDelegateEnum.h"
 #include "../../../Core/Core/PropertyEnum.h"
 #include "../PropertyDelegateFactory.h"
-#include "../PropertyEditorHandler.h"
+#include "../Utils/PropertyEditorHandler.h"
 
 #include <QComboBox>
 #include <QLineEdit>
+
+void regEnumDelegates(QtnPropertyDelegateFactory &factory)
+{
+    factory.registerDelegateDefault(&QtnPropertyEnumBase::staticMetaObject
+                 , &qtnCreateDelegate<QtnPropertyDelegateEnum, QtnPropertyEnumBase>
+                 , "ComboBox");
+}
 
 class QtnPropertyEnumComboBoxHandler: public QtnPropertyEditorHandler<QtnPropertyEnumBase, QComboBox>
 {
@@ -53,12 +60,6 @@ private:
     }
 };
 
-
-static bool regEnumDelegate = QtnPropertyDelegateFactory::staticInstance()
-                                .registerDelegateDefault(&QtnPropertyEnumBase::staticMetaObject
-                                , &qtnCreateDelegate<QtnPropertyDelegateEnum, QtnPropertyEnumBase>
-                                , "ComboBox");
-
 QWidget* QtnPropertyDelegateEnum::createValueEditorImpl(QWidget* parent, const QRect& rect, QtnInplaceInfo* inplaceInfo)
 {
     const QtnEnumInfo* info = owner().enumInfo();
@@ -70,7 +71,7 @@ QWidget* QtnPropertyDelegateEnum::createValueEditorImpl(QWidget* parent, const Q
     {
         QComboBox* combo = new QComboBox(parent);
         info->forEachEnumValue([combo](const QtnEnumValueInfo &value)->bool {
-            combo->addItem(value.name(), QVariant(value.value()));
+            combo->addItem(value.displayName(), QVariant(value.value()));
             return true;
         });
 
@@ -91,7 +92,7 @@ QWidget* QtnPropertyDelegateEnum::createValueEditorImpl(QWidget* parent, const Q
 
         QLineEdit* lineEdit = new QLineEdit(parent);
         lineEdit->setReadOnly(true);
-        lineEdit->setText(valueInfo->name());
+        lineEdit->setText(valueInfo->displayName());
 
         lineEdit->setGeometry(rect);
 
@@ -100,7 +101,7 @@ QWidget* QtnPropertyDelegateEnum::createValueEditorImpl(QWidget* parent, const Q
 
 }
 
-bool QtnPropertyDelegateEnum::propertyValueToStr(QString& strValue) const
+bool QtnPropertyDelegateEnum::propertyValueToStrImpl(QString& strValue) const
 {
     QtnEnumValueType value = owner().value();
     const QtnEnumInfo* info = owner().enumInfo();
@@ -109,6 +110,6 @@ bool QtnPropertyDelegateEnum::propertyValueToStr(QString& strValue) const
     if (!valueInfo)
         return false;
 
-    strValue = valueInfo->name();
+    strValue = valueInfo->displayName();
     return true;
 }

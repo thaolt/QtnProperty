@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2012-1015 Alex Zhondin <qtinuum.team@gmail.com>
+   Copyright (c) 2012-2016 Alex Zhondin <lexxmark.dev@gmail.com>
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -21,11 +21,18 @@
 #include "../../../Core/Core/PropertyBool.h"
 #include "../../../Core/Core/PropertyEnum.h"
 #include "../PropertyDelegateFactory.h"
-#include "../PropertyEditorHandler.h"
-#include "../PropertyEditorAux.h"
+#include "../Utils/PropertyEditorHandler.h"
+#include "../Utils/PropertyEditorAux.h"
 
 #include <QFontDialog>
 #include <QFontDatabase>
+
+void regQFontDelegates(QtnPropertyDelegateFactory &factory)
+{
+    factory.registerDelegateDefault(&QtnPropertyQFontBase::staticMetaObject
+                 , &qtnCreateDelegate<QtnPropertyDelegateQFont, QtnPropertyQFontBase>
+                 , "LineEditBttn");
+}
 
 class QtnPropertyQFontLineEditBttnHandler: public QtnPropertyEditorHandler<QtnPropertyQFontBase, QtnLineEditBttn>
 {
@@ -37,8 +44,8 @@ public:
 
         if (!property.isEditableByUser())
         {
-//            editor.lineEdit->setReadOnly(true);
-            editor.toolButton->setEnabled(false);
+	  // editor.lineEdit->setReadOnly(true);
+	  editor.toolButton->setEnabled(false);
         }
 
         updateEditor();
@@ -56,6 +63,8 @@ private:
 
     void onToolButtonClicked(bool checked)
     {
+        Q_UNUSED(checked);
+
         QFontDialog dlg(property(), &editor());
         if (dlg.exec() == QDialog::Accepted)
         {
@@ -63,11 +72,6 @@ private:
         }
     }
 };
-
-static bool regQFontDelegate = QtnPropertyDelegateFactory::staticInstance()
-                                .registerDelegateDefault(&QtnPropertyQFontBase::staticMetaObject
-                                , &qtnCreateDelegate<QtnPropertyDelegateQFont, QtnPropertyQFontBase>
-                                , "LineEditBttn");
 
 static QtnEnumInfo* styleStrategyEnum()
 {
@@ -242,7 +246,7 @@ QWidget* QtnPropertyDelegateQFont::createValueEditorImpl(QWidget* parent, const 
     return editor;
 }
 
-bool QtnPropertyDelegateQFont::propertyValueToStr(QString& strValue) const
+bool QtnPropertyDelegateQFont::propertyValueToStrImpl(QString& strValue) const
 {
     QFont value = owner().value();
     strValue = QString("[%1, %2]").arg(value.family()).arg(value.pointSize());

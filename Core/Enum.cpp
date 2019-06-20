@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2012-1015 Alex Zhondin <qtinuum.team@gmail.com>
+   Copyright (c) 2012-2016 Alex Zhondin <lexxmark.dev@gmail.com>
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -58,6 +58,23 @@ const QtnEnumValueInfo* QtnEnumInfo::findByName(const QString& name, Qt::CaseSen
     return result;
 }
 
+const QtnEnumValueInfo* QtnEnumInfo::findByDisplayName(const QString& displayName, Qt::CaseSensitivity cs) const
+{
+    const QtnEnumValueInfo* result = nullptr;
+
+    forEachEnumValue([&result, &displayName, cs](const QtnEnumValueInfo& enumValue)->bool {
+        if (QString::compare(enumValue.displayName(), displayName, cs) == 0)
+        {
+            result = &enumValue;
+            return false;
+        }
+
+        return true;
+    });
+
+    return result;
+}
+
 const QtnEnumValueInfo* QtnEnumInfo::fromStr(const QString& str) const
 {
     static QRegExp parserEnum("^\\s*([^:\\s]+)::([^:\\s]+)\\s*$", Qt::CaseInsensitive);
@@ -87,4 +104,14 @@ bool QtnEnumInfo::toStr(QString& str, const QtnEnumValueInfo* value) const
 
     str = QString("%1::%2").arg(name(), value->name());
     return true;
+}
+
+bool QtnEnumInfo::toStr(QString& str, QtnEnumValueType value) const
+{
+    return toStr(str, findByValue(value));
+}
+
+void QtnEnumInfo::setDynamicValues(const QVector<QtnEnumValueInfo>& dynamicValues)
+{
+    m_dynamicValues = dynamicValues;
 }

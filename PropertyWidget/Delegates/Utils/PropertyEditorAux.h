@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2012-1015 Alex Zhondin <qtinuum.team@gmail.com>
+   Copyright (c) 2012-2016 Alex Zhondin <lexxmark.dev@gmail.com>
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -17,21 +17,31 @@
 #ifndef PROPERTY_EDITOR_AUX_H
 #define PROPERTY_EDITOR_AUX_H
 
-#include "../PropertyWidgetAPI.h"
+#include "../../PropertyWidgetAPI.h"
+#include "PropertyDelegateMisc.h"
 
 #include <QLineEdit>
+#include <QComboBox>
 #include <QToolButton>
 
 class QKeyEvent;
-class QtnInplaceInfo;
 
 class QTN_PW_EXPORT QtnLineEditBttn: public QWidget
 {
 public:
-    QtnLineEditBttn(QWidget *parent);
+    QtnLineEditBttn(QWidget *parent, QString bttnText = "...");
 
-    QLineEdit *lineEdit;
-    QToolButton *toolButton;
+    QLineEdit *lineEdit = nullptr;
+    QToolButton *toolButton = nullptr;
+};
+
+class QTN_PW_EXPORT QtnComboBoxBttn: public QWidget
+{
+public:
+    QtnComboBoxBttn(QWidget *parent, QString bttnText = "...");
+
+    QComboBox *comboBox = nullptr;
+    QToolButton *toolButton = nullptr;
 };
 
 QTN_PW_EXPORT bool qtnAcceptForLineEdit(QKeyEvent *keyEvent);

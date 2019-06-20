@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2012-1015 Alex Zhondin <qtinuum.team@gmail.com>
+   Copyright (c) 2012-2016 Alex Zhondin <lexxmark.dev@gmail.com>
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -17,11 +17,11 @@
 #ifndef PROPERTY_DELEGATE_QCOLOR_H
 #define PROPERTY_DELEGATE_QCOLOR_H
 
-#include "../PropertyDelegate.h"
+#include "../Utils/PropertyDelegateMisc.h"
 
 class QtnPropertyQColorBase;
 
-class QTN_PW_EXPORT QtnPropertyDelegateQColor: public QtnPropertyDelegateTyped<QtnPropertyQColorBase>
+class QTN_PW_EXPORT QtnPropertyDelegateQColor: public QtnPropertyDelegateTypedEx<QtnPropertyQColorBase>
 {
     Q_DISABLE_COPY(QtnPropertyDelegateQColor)
 
@@ -32,10 +32,23 @@ protected:
     void applyAttributesImpl(const QtnPropertyDelegateAttributes& attributes) override;
     void drawValueImpl(QStylePainter& painter, const QRect& rect, const QStyle::State& state, bool* needTooltip = nullptr) const override;
     QWidget* createValueEditorImpl(QWidget* parent, const QRect& rect, QtnInplaceInfo* inplaceInfo = nullptr) override;
-    bool propertyValueToStr(QString& strValue) const override;
+    bool propertyValueToStrImpl(QString& strValue) const override;
 
 private:
     quint32 m_shape;
+};
+
+class QTN_PW_EXPORT QtnPropertyDelegateQColorSolid: public QtnPropertyDelegateTyped<QtnPropertyQColorBase>
+{
+    Q_DISABLE_COPY(QtnPropertyDelegateQColorSolid)
+
+public:
+    QtnPropertyDelegateQColorSolid(QtnPropertyQColorBase& owner);
+
+protected:
+    bool createSubItemValueImpl(QtnDrawContext& context, QtnSubItem& subItemValue) override;
+    void drawValueImpl(QStylePainter& painter, const QRect& rect, const QStyle::State& state, bool* needTooltip = nullptr) const override;
+    QWidget* createValueEditorImpl(QWidget* parent, const QRect& rect, QtnInplaceInfo* inplaceInfo = nullptr) override;
 };
 
 #endif // PROPERTY_DELEGATE_QCOLOR_H

@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2012-1015 Alex Zhondin <qtinuum.team@gmail.com>
+   Copyright (c) 2012-2016 Alex Zhondin <lexxmark.dev@gmail.com>
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -16,82 +16,15 @@
 
 #include "Property.h"
 
-class QtnPropertyDelegateInfoGetter
-{
-    Q_DISABLE_COPY(QtnPropertyDelegateInfoGetter)
-
-public:
-    virtual const QtnPropertyDelegateInfo* delegate() const = 0;
-
-    virtual ~QtnPropertyDelegateInfoGetter() {}
-
-protected:
-    QtnPropertyDelegateInfoGetter() {}
-};
-
-class QtnPropertyDelegateInfoGetterValue: public QtnPropertyDelegateInfoGetter
-{
-public:
-    QtnPropertyDelegateInfoGetterValue(const QtnPropertyDelegateInfo& delegate)
-        : m_delegate(delegate)
-    {
-    }
-
-    const QtnPropertyDelegateInfo* delegate() const override
-    {
-        return &m_delegate;
-    }
-
-private:
-    QtnPropertyDelegateInfo m_delegate;
-};
-
-class QtnPropertyDelegateInfoGetterCallback: public QtnPropertyDelegateInfoGetter
-{
-public:
-    QtnPropertyDelegateInfoGetterCallback(const std::function<const QtnPropertyDelegateInfo* ()>& callback)
-        : m_callback(callback)
-    {
-    }
-
-    const QtnPropertyDelegateInfo* delegate() const override
-    {
-        if (m_delegate.isNull())
-        {
-            m_delegate.reset(m_callback());
-        }
-
-        return m_delegate.data();
-    }
-
-private:
-    std::function<const QtnPropertyDelegateInfo* ()> m_callback;
-    mutable QScopedPointer<const QtnPropertyDelegateInfo> m_delegate;
-};
 
 QtnProperty::QtnProperty(QObject* parent)
     : QtnPropertyBase(parent)
 {
+    // collapsed by default
+    addState(QtnPropertyStateCollapsed);
 }
 
 QtnProperty::~QtnProperty()
 {
 }
 
-const QtnPropertyDelegateInfo* QtnProperty::delegate() const
-{
-    if (m_delegateInfoGetter.isNull())
-        return 0;
-
-    return m_delegateInfoGetter->delegate();
-}
-
-void QtnProperty::setDelegate(const QtnPropertyDelegateInfo& delegate)
-{
-    m_delegateInfoGetter.reset(new QtnPropertyDelegateInfoGetterValue(delegate));
-}
-
-void QtnProperty::setDelegateCallback(const std::function<const QtnPropertyDelegateInfo*()>& callback)
-{
-    m_delegateInfoGetter.reset(new QtnPropertyDelegateInfoGetterCallback(callback));
-}

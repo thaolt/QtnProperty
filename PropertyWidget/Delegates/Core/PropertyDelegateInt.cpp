@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2012-1015 Alex Zhondin <qtinuum.team@gmail.com>
+   Copyright (c) 2012-2016 Alex Zhondin <lexxmark.dev@gmail.com>
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -17,9 +17,22 @@
 #include "PropertyDelegateInt.h"
 #include "../../../Core/Core/PropertyInt.h"
 #include "../PropertyDelegateFactory.h"
-#include "../PropertyEditorHandler.h"
+#include "../Utils/PropertyEditorHandler.h"
+#include "../Utils/PropertyDelegateSliderBox.h"
 
 #include <QSpinBox>
+
+void regIntDelegates(QtnPropertyDelegateFactory &factory)
+{
+    factory.registerDelegateDefault(&QtnPropertyIntBase::staticMetaObject
+                 , &qtnCreateDelegate<QtnPropertyDelegateInt, QtnPropertyIntBase>
+                 , "SpinBox");
+
+    factory.registerDelegate(&QtnPropertyIntBase::staticMetaObject
+                 , &qtnCreateDelegate<QtnPropertyDelegateSlideBoxTyped<QtnPropertyIntBase>, QtnPropertyIntBase>
+                 , "SliderBox");
+}
+
 
 class QtnPropertyIntSpinBoxHandler: public QtnPropertyEditorHandler<QtnPropertyIntBase, QSpinBox>
 {
@@ -51,11 +64,6 @@ private:
     }
 };
 
-static bool regIntDelegate = QtnPropertyDelegateFactory::staticInstance()
-                                .registerDelegateDefault(&QtnPropertyIntBase::staticMetaObject
-                                , &qtnCreateDelegate<QtnPropertyDelegateInt, QtnPropertyIntBase>
-                                , "SpinBox");
-
 QWidget* QtnPropertyDelegateInt::createValueEditorImpl(QWidget* parent, const QRect& rect, QtnInplaceInfo* inplaceInfo)
 {
     QSpinBox* spinBox = new QSpinBox(parent);
@@ -71,7 +79,7 @@ QWidget* QtnPropertyDelegateInt::createValueEditorImpl(QWidget* parent, const QR
     return spinBox;
 }
 
-bool QtnPropertyDelegateInt::propertyValueToStr(QString& strValue) const
+bool QtnPropertyDelegateInt::propertyValueToStrImpl(QString& strValue) const
 {
     strValue = QString::number(owner().value());
     return true;

@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2012-1015 Alex Zhondin <qtinuum.team@gmail.com>
+   Copyright (c) 2012-2016 Alex Zhondin <lexxmark.dev@gmail.com>
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -20,10 +20,12 @@
 
 #include <QLineEdit>
 
-static bool regQSizeDelegate = QtnPropertyDelegateFactory::staticInstance()
-                                .registerDelegateDefault(&QtnPropertyQSizeBase::staticMetaObject
-                                , &qtnCreateDelegate<QtnPropertyDelegateQSize, QtnPropertyQSizeBase>
-                                , "WH");
+void regQSizeDelegates(QtnPropertyDelegateFactory &factory)
+{
+    factory.registerDelegateDefault(&QtnPropertyQSizeBase::staticMetaObject
+			     , &qtnCreateDelegate<QtnPropertyDelegateQSize, QtnPropertyQSizeBase>
+			     , "WH");
+}
 
 QtnPropertyDelegateQSize::QtnPropertyDelegateQSize(QtnPropertyQSizeBase& owner)
     : QtnPropertyDelegateTypedEx<QtnPropertyQSizeBase>(owner)
@@ -37,7 +39,7 @@ QWidget* QtnPropertyDelegateQSize::createValueEditorImpl(QWidget* parent, const 
     return createValueEditorLineEdit(parent, rect, true, inplaceInfo);
 }
 
-bool QtnPropertyDelegateQSize::propertyValueToStr(QString& strValue) const
+bool QtnPropertyDelegateQSize::propertyValueToStrImpl(QString& strValue) const
 {
     QSize value = owner().value();
     strValue = QString("%1 x %2").arg(value.width()).arg(value.height());
